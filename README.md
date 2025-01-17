@@ -1,5 +1,5 @@
 # Introduction
-  Boiler plate personal assisstant to help users and developers to automate day to day tasks
+  Boiler plate personal assistant to help users and developers to automate day to day tasks
 
 # Requirements:
   - Python Version > 2.11
