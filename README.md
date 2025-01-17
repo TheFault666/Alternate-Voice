@@ -7,7 +7,7 @@
     - ``` Python
       pip install SpeechRecognition
       ```
-  - Pyttsx Library:
+  - Pyttsx3 Library:
     - ``` Python
       pip install pyttsx3
       ```
