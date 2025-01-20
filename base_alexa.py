@@ -2,6 +2,8 @@ import os
 import speech_recognition as sr
 import pyttsx3 as pt
 import webbrowser as app
+from datetime import datetime
+
 
 # Initialize text-to-speech engine
 def init_tts(voice_index=1, rate=150):
@@ -14,12 +16,15 @@ def init_tts(voice_index=1, rate=150):
         print("Invalid voice index, using default voice.")
     return engine
 
-# Log recognized text to a file
-def log_text(text, file_name="log.txt"):
-    with open(file_name, "a") as logfile:
-        logfile.write(text + "\n")
 
-# Process recognized voice command
+# Log recognized text to a file with a timestamp
+def log_text(text, file_name="log.txt"):
+    timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+    with open(file_name, "a") as logfile:
+        logfile.write(f"{timestamp} {text}\n")
+
+
+# Process recognized voice commands
 def process_command(command, tts_engine):
     if "alexa play " in command:
         url = command[11:]
@@ -41,22 +46,48 @@ def process_command(command, tts_engine):
 
     else:
         print("Sorry, I didn't understand that.")
+        # tts_engine.say("Sorry, I didn't understand that.")
         tts_engine.runAndWait()
 
     return True
+
+
+# Automatically select a microphone
+def auto_select_microphone():
+    microphones = sr.Microphone.list_microphone_names()
+    if not microphones:
+        raise RuntimeError("No microphones detected.")
+
+    print("Available microphones:")
+    for i, mic_name in enumerate(microphones):
+        print(f"{i}: {mic_name}")
+
+    # Attempt to find a preferred microphone
+    preferred_keywords = ["microphone", "mic", "input"]
+    for i, mic_name in enumerate(microphones):
+        if any(keyword.lower() in mic_name.lower() for keyword in preferred_keywords):
+            print(f"Automatically selected preferred microphone: {mic_name}")
+            return sr.Microphone(device_index=i)
+
+    # Fall back to the first available microphone
+    print("No preferred microphone found. Using the default microphone.")
+    return sr.Microphone()
+
 
 # Main program
 def main():
     recognizer = sr.Recognizer()
     tts_engine = init_tts()
 
+    mic = auto_select_microphone()
     print("Trigger phrase is 'Alexa/Okay Google'")
+
     while True:
         try:
-            with sr.Microphone() as mic:
-                recognizer.adjust_for_ambient_noise(mic, duration=0.2)
+            with mic as source:
+                recognizer.adjust_for_ambient_noise(source, duration=0.2)
                 print("Listening...")
-                audio = recognizer.listen(mic)
+                audio = recognizer.listen(source)
                 command = recognizer.recognize_google(audio).lower()
                 
                 log_text(command)
@@ -69,6 +100,7 @@ def main():
             print(f"Error making the request: {e}")
 
     print("Exiting...")
+
 
 if __name__ == "__main__":
     main()
